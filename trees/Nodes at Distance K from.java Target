@@ -1,0 +1,111 @@
+import java.util.*;
+
+class Node {
+    int data;
+    Node left, right;
+    Node(int data) {
+        this.data = data;
+        left = right = null;
+    }
+}
+
+class Solution {
+    // Step 1: Build parent map so we can go upwards
+    void buildParentMap(Node root, Map<Node, Node> parent) {
+        Queue<Node> q = new LinkedList<>();
+        q.add(root);
+
+        while (!q.isEmpty()) {
+            Node curr = q.poll();
+            if (curr.left != null) {
+                parent.put(curr.left, curr);   // left child's parent is curr
+                q.add(curr.left);
+            }
+            if (curr.right != null) {
+                parent.put(curr.right, curr);  // right child's parent is curr
+                q.add(curr.right);
+            }
+        }
+    }
+
+    // Step 2: BFS from target node to find nodes at distance k
+    List<Integer> distanceK(Node root, Node target, int k) {
+        Map<Node, Node> parent = new HashMap<>();
+        buildParentMap(root, parent);  // build parent links
+
+        Queue<Node> q = new LinkedList<>();
+        Set<Node> visited = new HashSet<>();
+
+        q.add(target);
+        visited.add(target);
+
+        int dist = 0;
+        while (!q.isEmpty()) {
+            int size = q.size();
+
+            // If we reached distance k, collect all nodes in queue
+            if (dist == k) {
+                List<Integer> result = new ArrayList<>();
+                for (Node node : q) {
+                    result.add(node.data);
+                }
+                return result;
+            }
+
+            // Process one level fully
+            for (int i = 0; i < size; i++) {
+                Node curr = q.poll();
+
+                // Go left
+                if (curr.left != null && !visited.contains(curr.left)) {
+                    visited.add(curr.left);
+                    q.add(curr.left);
+                }
+
+                // Go right
+                if (curr.right != null && !visited.contains(curr.right)) {
+                    visited.add(curr.right);
+                    q.add(curr.right);
+                }
+
+                // Go up (parent)
+                if (parent.containsKey(curr) && !visited.contains(parent.get(curr))) {
+                    visited.add(parent.get(curr));
+                    q.add(parent.get(curr));
+                }
+            }
+            dist++; // move to next level
+        }
+        return new ArrayList<>(); // no nodes at distance k
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        // Build sample tree: [3,5,1,6,2,0,8,null,null,7,4]
+        Node root = new Node(3);
+        root.left = new Node(5);
+        root.right = new Node(1);
+        root.left.left = new Node(6);
+        root.left.right = new Node(2);
+        root.right.left = new Node(0);
+        root.right.right = new Node(8);
+        root.left.right.left = new Node(7);
+        root.left.right.right = new Node(4);
+
+        Solution sol = new Solution();
+
+        // Example 1: target=5, k=2 → [7,4,1]
+        List<Integer> ans1 = sol.distanceK(root, root.left, 2);
+        System.out.println(ans1);
+
+        // Example 2: target=5, k=0 → [5]
+        List<Integer> ans2 = sol.distanceK(root, root.left, 0);
+        System.out.println(ans2);
+
+        // Example 3: target=1, k=3 → []
+        List<Integer> ans3 = sol.distanceK(root, root.right, 3);
+        System.out.println(ans3);
+    }
+}
+
